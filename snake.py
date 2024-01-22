@@ -1,6 +1,7 @@
 # Importar o pygame e o random para podermos usá-las
 import pygame
 import random
+import pygame_menu
 
 
 def genComida():
@@ -9,6 +10,7 @@ def genComida():
         BLOCO * random.randint(0, GRELHA - 1),
         False,
     ]
+
     return comida
 
 
@@ -30,56 +32,48 @@ pontos = 0
 # Variavel que nos vai dizer onde está o jogador a todos os momentos, o jogador começa no meio do ecrã
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
+meio = screen.get_width() / 2, screen.get_height() / 2
+
 wants_to = ""
 direction = ""
-cobra = [
-    [
-        pygame.image.load("imagens/cobra.png"),
-        screen.get_width() / 2,
-        screen.get_height() / 2,
-    ]
-]
+
+
+menu = pygame_menu.Menu(
+    "Bem vindo",
+    400,
+    400,
+    theme=pygame_menu.themes.THEME_BLUE,
+)
+
 
 # Começar o jogo em si
 while running:
     # Se o jogador clicar no X o programa fecha
-    for event in pygame.event.get():
+    events = pygame.event.get()
+    for event in events:
         if event.type == pygame.QUIT:
             running = False
 
     # Preencher o fundo do jogo
-    screen.fill("black")
+    screen.fill("RED")
+
+    if menu.is_enabled():
+        menu.update(events)
+        menu.draw(screen)
 
     if comida[2]:
         comida = genComida()
 
     fruta = pygame.image.load("imagens/fruta.png")
+    cobra = pygame.image.load("imagens/cobra.png")
     screen.blit(fruta, (comida[0], comida[1]))
-
-    # Update positions of the snake's body segments
-    for i in range(pontos, 0, -1):
-        cobra[i][1] = cobra[i - 1][1] + BLOCO
-        cobra[i][2] = cobra[i - 1][2] + BLOCO
-
-    # Update position of the snake's head
-    if direction == "CIMA":
-        cobra[0][2] -= 3
-    elif direction == "BAIXO":
-        cobra[0][2] += 3
-    elif direction == "ESQUERDA":
-        cobra[0][1] -= 3
-    elif direction == "DIREITA":
-        cobra[0][1] += 3
-
-    # Draw the snake
-    for i in range(pontos + 1):
-        screen.blit(cobra[i][0], (cobra[i][1], cobra[i][2]))
+    screen.blit(cobra, (player_pos[0], player_pos[1]))
 
     # colisões
-    if comida[0] == cobra[0][1] and comida[1] == cobra[0][2]:
-        comida[2] = True
-        pontos += 1
-        cobra.append([pygame.image.load("imagens/cobra.png"), -BLOCO, -BLOCO])
+    if comida[0] == player_pos[0]:
+        if comida[1] == player_pos[1]:
+            comida[2] = True
+            pontos += 1
 
     # input
     keys = pygame.key.get_pressed()
@@ -94,17 +88,27 @@ while running:
 
     # movimentação
     step = 3
-    if wants_to == "CIMA" and cobra[0][1] % BLOCO == 0:
+    if wants_to == "CIMA" and player_pos[0] % BLOCO == 0:
         direction = wants_to
-    elif wants_to == "BAIXO" and cobra[0][1] % BLOCO == 0:
-        direction = wants_to
-    elif wants_to == "ESQUERDA" and cobra[0][2] % BLOCO == 0:
-        direction = wants_to
-    elif wants_to == "DIREITA" and cobra[0][2] % BLOCO == 0:
+    elif wants_to == "BAIXO" and player_pos[0] % BLOCO == 0:
         direction = wants_to
 
+    if wants_to == "ESQUERDA" and player_pos[1] % BLOCO == 0:
+        direction = wants_to
+    elif wants_to == "DIREITA" and player_pos[1] % BLOCO == 0:
+        direction = wants_to
+
+    if direction == "CIMA" and player_pos[1] > 0:
+        player_pos[1] -= step
+    elif direction == "BAIXO" and player_pos[1] < screen.get_height() - BLOCO:
+        player_pos[1] += step
+    elif direction == "ESQUERDA" and player_pos[0] > 0:
+        player_pos[0] -= step
+    elif direction == "DIREITA" and player_pos[0] < screen.get_width() - BLOCO:
+        player_pos[0] += step
+
     # flip() the display to put your work on screen
-    pygame.display.flip()
-    clock.tick(60)  # Decreased the speed for better visibility
+    pygame.display.update()
+    clock.tick(60)
 
 pygame.quit()
