@@ -5,11 +5,10 @@ import random
 
 def genComida():
     comida = [
-        BLOCO * random.randint(0, GRELHA),
-        BLOCO * random.randint(0, GRELHA),
+        BLOCO * random.randint(0, GRELHA - 1),
+        BLOCO * random.randint(0, GRELHA - 1),
         False,
     ]
-    print(comida[0], comida[1])
 
     return comida
 
@@ -27,12 +26,15 @@ running = True
 # Uma comida vai aparecer num local aleatório
 comida = genComida()
 
+pontos = 0
+
 # Variavel que nos vai dizer onde está o jogador a todos os momentos, o jogador começa no meio do ecrã
 player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
+meio = screen.get_width() / 2, screen.get_height() / 2
+
 wants_to = ""
 direction = ""
-last_direction = ["", ""]
 
 # Começar o jogo em si
 while running:
@@ -47,51 +49,48 @@ while running:
     if comida[2]:
         comida = genComida()
 
-    pygame.draw.rect(screen, "red", (player_pos[0], player_pos[1], BLOCO, BLOCO))
-    pygame.draw.rect(screen, "green", (comida[0], comida[1], BLOCO, BLOCO))
-    pygame.display.flip()
+    fruta = pygame.image.load("imagens/fruta.png")
+    cobra = pygame.image.load("imagens/cobra.png")
+    screen.blit(fruta, (comida[0], comida[1]))
+    screen.blit(cobra, (player_pos[0], player_pos[1]))
 
     # colisões
-    if comida[0] < player_pos[0] < (comida[0] + BLOCO):
-        if comida[1] < player_pos[1] < (comida[1] + BLOCO):
+    if comida[0] == player_pos[0]:
+        if comida[1] == player_pos[1]:
             comida[2] = True
+            pontos += 1
 
     # input
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_w] or keys[pygame.K_UP] and direction != "BAIXO":
+    if (keys[pygame.K_w] or keys[pygame.K_UP]) and wants_to != "BAIXO":
         wants_to = "CIMA"
-    if keys[pygame.K_s] or keys[pygame.K_DOWN] and direction != "CIMA":
+    if (keys[pygame.K_s] or keys[pygame.K_DOWN]) and wants_to != "CIMA":
         wants_to = "BAIXO"
-    if keys[pygame.K_a] or keys[pygame.K_LEFT] and direction != "DIREITA":
+    if (keys[pygame.K_a] or keys[pygame.K_LEFT]) and wants_to != "DIREITA":
         wants_to = "ESQUERDA"
-    if keys[pygame.K_d] or keys[pygame.K_RIGHT] and direction != "ESQUERDA":
+    if (keys[pygame.K_d] or keys[pygame.K_RIGHT]) and wants_to != "ESQUERDA":
         wants_to = "DIREITA"
 
     # movimentação
-    print(wants_to)
-    step = 5
-    if wants_to == "CIMA" and player_pos.y > 0:
-        if player_pos.x % BLOCO == 0:
-            direction = wants_to
-    elif wants_to == "BAIXO" and player_pos.y < screen.get_height() - BLOCO:
-        if player_pos.y % BLOCO == 0:
-            direction = wants_to
+    step = 3
+    if wants_to == "CIMA" and player_pos[0] % BLOCO == 0:
+        direction = wants_to
+    elif wants_to == "BAIXO" and player_pos[0] % BLOCO == 0:
+        direction = wants_to
 
-    if wants_to == "ESQUERDA" and player_pos.x > 0:
-        if player_pos.y % BLOCO == 0:
-            direction = wants_to
-    elif wants_to == "DIREITA" and player_pos.x < screen.get_width() - BLOCO:
-        if player_pos.y % BLOCO == 0:
-            direction = wants_to
+    if wants_to == "ESQUERDA" and player_pos[1] % BLOCO == 0:
+        direction = wants_to
+    elif wants_to == "DIREITA" and player_pos[1] % BLOCO == 0:
+        direction = wants_to
 
-    if direction == "CIMA":
-        player_pos.y -= step
-    elif direction == "BAIXO":
-        player_pos.y += step
-    elif direction == "ESQUERDA":
-        player_pos.x -= step
-    elif direction == "DIREITA":
-        player_pos.x += step
+    if direction == "CIMA" and player_pos[1] > 0:
+        player_pos[1] -= step
+    elif direction == "BAIXO" and player_pos[1] < screen.get_height() - BLOCO:
+        player_pos[1] += step
+    elif direction == "ESQUERDA" and player_pos[0] > 0:
+        player_pos[0] -= step
+    elif direction == "DIREITA" and player_pos[0] < screen.get_width() - BLOCO:
+        player_pos[0] += step
 
     # flip() the display to put your work on screen
     pygame.display.flip()

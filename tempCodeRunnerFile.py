@@ -1,4 +1,7 @@
-
-        player_pos.x -= step
-    elif direction == "DIREITA":
-        player_pos.x += step
+cobra.append(
+    #     [
+    #         pygame.image.load("imagens/cobra.png"),
+    #         screen.get_width() / 2,
+    #         screen.get_height() / 2,
+    #     ]
+    # )
