@@ -2,6 +2,7 @@
 import pygame
 import random
 import pygame_menu
+from functools import partial
 
 
 def genComida():
@@ -31,12 +32,7 @@ def set_fruta(fruta, valor):
     print("fruta")
 
 
-def set_player(nome, kwargs):
-    kwargs = nome
-    return kwargs
-
-
-def atuamae():
+def atuamae(player):
     # Define que o jogo está a decorrer
     running = True
 
@@ -81,10 +77,12 @@ def atuamae():
 
         font = pygame.font.SysFont("opensans.ttf", 40)
         text_pontos = font.render("Pontos: " + str(pontos), True, "black")
-        text_player = font.render("Player: " + player, True, "green")
+        text_player = font.render("Player: " + player, True, "black")
+        text_player_rect = text_player.get_rect()
+        text_player_rect.x = screen.get_width() - text_player_rect.width
 
         screen.blit(text_pontos, text_pontos.get_rect())
-        # screen.blit(text_player, text_player.get_rect())
+        screen.blit(text_player, text_player_rect)
 
         fruta = pygame.image.load("imagens/fruta.png")
         cobra = pygame.image.load("imagens/cobra.png")
@@ -154,13 +152,17 @@ BLOCO = 30
 GRELHA = 16
 screen = pygame.display.set_mode((BLOCO * GRELHA, BLOCO * (GRELHA + 1)))
 clock = pygame.time.Clock()
-pygame.display.set_caption("Snake da mia e da Wakidd")
+pygame.display.set_caption("Snake da mia e da Wakid")
 player = "mia"
 
 menu = pygame_menu.Menu(
-    "Bem vindo", 400, 400, theme=pygame_menu.themes.THEME_BLUE, onclose=atuamae
+    "Bem vindo",
+    400,
+    400,
+    theme=pygame_menu.themes.THEME_BLUE,
+    onclose=partial(atuamae, player),
 )
-menu.add.text_input("Name :", default="mia", onchange=set_player, kwargs=player)
+player_input = menu.add.text_input("Name :", default="mia")
 menu.add.selector(
     "Fruta :", [("Morango", 1), ("Laranja", 2), ("Pera", 3)], onchange=set_fruta
 )
@@ -177,4 +179,5 @@ while menu.is_enabled():
 
     menu.update(events)
     menu.draw(screen)
+    player = player_input.get_value()
     pygame.display.update()
