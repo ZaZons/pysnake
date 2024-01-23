@@ -14,12 +14,26 @@ def genComida():
     return comida
 
 
+def morre():
+    font = pygame.font.SysFont("opensans.ttf", 100)
+    text_morreste = font.render("Morreste", True, "black", "white")
+
+    morreste_rect = text_morreste.get_rect()
+    morreste_rect.x = screen.get_width() / 2 - morreste_rect.width / 2
+    morreste_rect.y = screen.get_height() / 2 - morreste_rect.height / 2
+
+    screen.blit(text_morreste, morreste_rect)
+
+    return False
+
+
 def set_fruta(fruta, valor):
     print("fruta")
 
 
-def set_player(nome, player):
-    player = nome
+def set_player(nome, kwargs):
+    kwargs = nome
+    return kwargs
 
 
 def atuamae():
@@ -32,7 +46,9 @@ def atuamae():
     pontos = 0
 
     # Variavel que nos vai dizer onde está o jogador a todos os momentos, o jogador começa no meio do ecrã
-    player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+    player_pos = pygame.Vector2(
+        screen.get_width() / 2, (screen.get_height() + BLOCO) / 2
+    )
 
     wants_to = ""
     direction = ""
@@ -45,8 +61,9 @@ def atuamae():
             comida = genComida()
 
         # Preencher o fundo do jogo
-        for i in range(0, GRELHA):
-            for j in range(0, GRELHA - 1, 2):
+        screen.fill("white")
+        for i in range(1, GRELHA + 1):
+            for j in range(0, GRELHA, 2):
                 if i % 2 == 0:
                     pygame.draw.rect(
                         screen, (187, 213, 249), (j * BLOCO, BLOCO * i, 30, 30)
@@ -62,7 +79,7 @@ def atuamae():
                         screen, (187, 213, 249), ((j + 1) * BLOCO, BLOCO * i, 30, 30)
                     )
 
-        font = pygame.font.SysFont("opensans.ttf", 32)
+        font = pygame.font.SysFont("opensans.ttf", 40)
         text_pontos = font.render("Pontos: " + str(pontos), True, "black")
         text_player = font.render("Player: " + player, True, "green")
 
@@ -103,39 +120,51 @@ def atuamae():
         elif wants_to == "DIREITA" and player_pos[1] % BLOCO == 0:
             direction = wants_to
 
-        if direction == "CIMA" and player_pos[1] > 0:
+        if direction == "CIMA":
             player_pos[1] -= step
-        elif direction == "BAIXO" and player_pos[1] < screen.get_height() - BLOCO:
+        elif direction == "BAIXO":
             player_pos[1] += step
-        elif direction == "ESQUERDA" and player_pos[0] > 0:
+        elif direction == "ESQUERDA":
             player_pos[0] -= step
-        elif direction == "DIREITA" and player_pos[0] < screen.get_width() - BLOCO:
+        elif direction == "DIREITA":
             player_pos[0] += step
+
+        if (
+            player_pos[1] < BLOCO
+            or player_pos[1] > screen.get_height() - BLOCO
+            or player_pos[0] < 0
+            or player_pos[0] > screen.get_width() - BLOCO
+        ):
+            running = morre()
 
         # flip() the display to put your work on screen
         pygame.display.flip()
         clock.tick(60)
 
-    pygame.quit()
+    pygame.event.clear()
+    while True:
+        event = pygame.event.wait()
+        if event.type == pygame.locals.QUIT or event.type == pygame.locals.KEYDOWN:
+            pygame.quit()
 
 
 # Inicia a janela do pygame
 pygame.init()
 BLOCO = 30
 GRELHA = 16
-screen = pygame.display.set_mode((BLOCO * GRELHA, BLOCO * GRELHA))
+screen = pygame.display.set_mode((BLOCO * GRELHA, BLOCO * (GRELHA + 1)))
 clock = pygame.time.Clock()
 pygame.display.set_caption("Snake da mia e da Wakidd")
-player = ""
+player = "mia"
 
 menu = pygame_menu.Menu(
     "Bem vindo", 400, 400, theme=pygame_menu.themes.THEME_BLUE, onclose=atuamae
 )
-menu.add.text_input("Name :", default="mia", onchange=set_player)
+menu.add.text_input("Name :", default="mia", onchange=set_player, kwargs=player)
 menu.add.selector(
     "Fruta :", [("Morango", 1), ("Laranja", 2), ("Pera", 3)], onchange=set_fruta
 )
-menu.add.button("Play", menu.close)
+menu.add.button("Play", pygame_menu.events.CLOSE)
 menu.add.button("Quit", pygame_menu.events.EXIT)
 
 # Começar o jogo em si
