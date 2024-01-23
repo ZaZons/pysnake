@@ -18,6 +18,10 @@ def set_fruta(fruta, valor):
     print("fruta")
 
 
+def set_player(nome, player):
+    player = nome
+
+
 def atuamae():
     # Define que o jogo está a decorrer
     running = True
@@ -45,18 +49,25 @@ def atuamae():
             for j in range(0, GRELHA - 1, 2):
                 if i % 2 == 0:
                     pygame.draw.rect(
-                        screen, (0, 0, 255), (j * BLOCO, BLOCO * i, 30, 30)
+                        screen, (187, 213, 249), (j * BLOCO, BLOCO * i, 30, 30)
                     )
                     pygame.draw.rect(
-                        screen, (0, 255, 255), ((j + 1) * BLOCO, BLOCO * i, 30, 30)
+                        screen, (152, 193, 246), ((j + 1) * BLOCO, BLOCO * i, 30, 30)
                     )
                 else:
                     pygame.draw.rect(
-                        screen, (0, 255, 255), (j * BLOCO, BLOCO * i, 30, 30)
+                        screen, (152, 193, 246), (j * BLOCO, BLOCO * i, 30, 30)
                     )
                     pygame.draw.rect(
-                        screen, (0, 0, 255), ((j + 1) * BLOCO, BLOCO * i, 30, 30)
+                        screen, (187, 213, 249), ((j + 1) * BLOCO, BLOCO * i, 30, 30)
                     )
+
+        font = pygame.font.SysFont("opensans.ttf", 32)
+        text_pontos = font.render("Pontos: " + str(pontos), True, "black")
+        text_player = font.render("Player: " + player, True, "green")
+
+        screen.blit(text_pontos, text_pontos.get_rect())
+        # screen.blit(text_player, text_player.get_rect())
 
         fruta = pygame.image.load("imagens/fruta.png")
         cobra = pygame.image.load("imagens/cobra.png")
@@ -114,11 +125,13 @@ BLOCO = 30
 GRELHA = 16
 screen = pygame.display.set_mode((BLOCO * GRELHA, BLOCO * GRELHA))
 clock = pygame.time.Clock()
+pygame.display.set_caption("Snake da mia e da Wakidd")
+player = ""
 
 menu = pygame_menu.Menu(
     "Bem vindo", 400, 400, theme=pygame_menu.themes.THEME_BLUE, onclose=atuamae
 )
-menu.add.text_input("Name :", default="mia")
+menu.add.text_input("Name :", default="mia", onchange=set_player)
 menu.add.selector(
     "Fruta :", [("Morango", 1), ("Laranja", 2), ("Pera", 3)], onchange=set_fruta
 )
