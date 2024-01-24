@@ -2,13 +2,12 @@
 import pygame
 import random
 import pygame_menu
-from functools import partial
 
 
 def genComida():
     comida = [
         BLOCO * random.randint(0, GRELHA - 1),
-        BLOCO * random.randint(0, GRELHA - 1),
+        BLOCO * random.randint(1, GRELHA - 1),
         False,
     ]
 
@@ -28,14 +27,55 @@ def morre():
     return False
 
 
-def set_fruta(fruta, valor):
-    print("fruta")
+def pontuacao():
+    aqui = True
+    while aqui:
+        screen.fill("white")
+        font = pygame.font.SysFont("opensans.ttf", 30)
+        if len(leaderboard) > 0:
+            for i in range(0, len(leaderboard)):
+                for j in range(0, len(leaderboard) - i - 1):
+                    if leaderboard[j][1] < leaderboard[j + 1][1]:
+                        temp = leaderboard[j]
+                        leaderboard[j] = leaderboard[j + 1]
+                        leaderboard[j + 1] = temp
+
+            for i in range(0, len(leaderboard)):
+                texto = (
+                    "#"
+                    + str(i + 1)
+                    + ": "
+                    + leaderboard[i][0]
+                    + " ("
+                    + str(leaderboard[i][1])
+                    + " pontos)"
+                )
+                text = font.render(texto, True, "black")
+                text_rect = text.get_rect()
+                text_rect.x = screen.get_width() / 2 - text_rect.width / 2
+                text_rect.y = i * 20
+                screen.blit(text, text_rect)
+
+        else:
+            text = font.render("Sem pontuações ainda, joguem um pouco!!", True, "black")
+            screen.blit(text, text.get_rect())
+
+        pygame.display.flip()
+
+        while True:
+            event = pygame.event.wait()
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                pygame_menu.events.QUIT
+
+            if event.type == pygame.locals.KEYDOWN:
+                aqui = False
+                break
 
 
-def atuamae(player):
+def jogar():
     # Define que o jogo está a decorrer
     running = True
-
     # Uma comida vai aparecer num local aleatório
     comida = genComida()
 
@@ -51,7 +91,7 @@ def atuamae(player):
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                pygame.quit()
 
         if comida[2]:
             comida = genComida()
@@ -77,16 +117,18 @@ def atuamae(player):
 
         font = pygame.font.SysFont("opensans.ttf", 40)
         text_pontos = font.render("Pontos: " + str(pontos), True, "black")
-        text_player = font.render("Player: " + player, True, "black")
+        text_player = font.render("Player: " + player_input.get_value(), True, "black")
         text_player_rect = text_player.get_rect()
         text_player_rect.x = screen.get_width() - text_player_rect.width
 
         screen.blit(text_pontos, text_pontos.get_rect())
         screen.blit(text_player, text_player_rect)
 
-        fruta = pygame.image.load("imagens/fruta.png")
+        imagem_comida = pygame.image.load(
+            "imagens/comida/" + comida_input.get_value()[0][0] + ".png"
+        )
         cobra = pygame.image.load("imagens/cobra.png")
-        screen.blit(fruta, (comida[0], comida[1]))
+        screen.blit(imagem_comida, (comida[0], comida[1]))
         screen.blit(cobra, (player_pos[0], player_pos[1]))
 
         # colisões
@@ -127,23 +169,28 @@ def atuamae(player):
         elif direction == "DIREITA":
             player_pos[0] += step
 
+        # morte
         if (
             player_pos[1] < BLOCO
             or player_pos[1] > screen.get_height() - BLOCO
             or player_pos[0] < 0
             or player_pos[0] > screen.get_width() - BLOCO
         ):
+            leaderboard.append((player_input.get_value(), pontos))
             running = morre()
 
         # flip() the display to put your work on screen
         pygame.display.flip()
         clock.tick(60)
 
-    pygame.event.clear()
     while True:
         event = pygame.event.wait()
-        if event.type == pygame.locals.QUIT or event.type == pygame.locals.KEYDOWN:
+        if event.type == pygame.QUIT:
             pygame.quit()
+            pygame_menu.events.EXIT
+
+        if event.type == pygame.locals.KEYDOWN:
+            break
 
 
 # Inicia a janela do pygame
@@ -153,24 +200,24 @@ GRELHA = 16
 screen = pygame.display.set_mode((BLOCO * GRELHA, BLOCO * (GRELHA + 1)))
 clock = pygame.time.Clock()
 pygame.display.set_caption("Snake da mia e da Wakid")
-player = "mia"
-
+leaderboard = []
 menu = pygame_menu.Menu(
     "Bem vindo",
     400,
     400,
     theme=pygame_menu.themes.THEME_BLUE,
-    onclose=partial(atuamae, player),
 )
-player_input = menu.add.text_input("Name :", default="mia")
-menu.add.selector(
-    "Fruta :", [("Morango", 1), ("Laranja", 2), ("Pera", 3)], onchange=set_fruta
+player_input = menu.add.text_input("Nome: ", default="mia")
+comida_input = menu.add.selector(
+    "Comida: ", [("Morango", 0), ("Laranja", 1), ("Pera", 2), ("Chocolate", 3)]
 )
-menu.add.button("Play", pygame_menu.events.CLOSE)
-menu.add.button("Quit", pygame_menu.events.EXIT)
+menu.add.button("Pontuação", pontuacao)
+menu.add.button("Jogar", jogar)
+menu.add.button("Sair", pygame_menu.events.EXIT)
 
 # Começar o jogo em si
 while menu.is_enabled():
+    screen.fill((255, 223, 255))
     # Se o jogador clicar no X o programa fecha
     events = pygame.event.get()
     for event in events:
@@ -179,5 +226,4 @@ while menu.is_enabled():
 
     menu.update(events)
     menu.draw(screen)
-    player = player_input.get_value()
     pygame.display.update()
